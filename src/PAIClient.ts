@@ -23,11 +23,12 @@ export class PAIClient {
     }
   }
 
-  async *invoke(req: InvokeRequest): AsyncGenerator<SSEEvent> {
+  async *invoke(req: InvokeRequest, signal?: AbortSignal): AsyncGenerator<SSEEvent> {
     const res = await fetch(`${this.baseUrl}/invoke`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(req),
+      signal,
     });
 
     if (!res.ok) {
@@ -47,6 +48,7 @@ export class PAIClient {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+      if (signal?.aborted) { await reader.cancel(); return; }
       buffer += decoder.decode(value, { stream: true });
 
       const lines = buffer.split("\n\n");

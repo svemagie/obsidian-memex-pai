@@ -13,6 +13,7 @@ export class PAIResultModal extends Modal {
   private history: ConversationTurn[] = [];
   private lastDoneEvent: SSEDoneEvent | null = null;
   private isStreaming = false;
+  private abortController: AbortController | null = null;
   private fullDialogText = "";
 
   constructor(
@@ -73,14 +74,18 @@ export class PAIResultModal extends Modal {
     cancelBtn.addEventListener("click", () => this.close());
 
     this.setStreaming(true);
+    // Seed history with a synthetic user turn so follow-up history is properly paired
+    this.history.push({ role: "user", content: `[Analyzing note: ${this.sourceFile.basename}]` });
     this.streamTurn(this.req);
   }
 
   onClose(): void {
+    this.abortController?.abort();
     this.contentEl.empty();
   }
 
   private setStreaming(active: boolean): void {
+    if (!this.contentEl.isConnected) return;
     this.isStreaming = active;
     this.sendBtn.disabled = active;
     this.inputEl.disabled = active;
@@ -89,17 +94,20 @@ export class PAIResultModal extends Modal {
   }
 
   private async streamTurn(req: InvokeRequest): Promise<void> {
+    this.abortController = new AbortController();
+    const signal = this.abortController.signal;
     const turnEl = this.outputEl.createEl("div", { cls: "memex-pai-turn assistant" });
+    const textSpan = turnEl.createEl("span");
     const cursorEl = turnEl.createEl("span", { text: t("modalStreaming"), cls: "memex-pai-cursor" });
     let turnText = "";
     let gotDone = false;
 
     try {
-      for await (const event of this.client.invoke(req)) {
+      for await (const event of this.client.invoke(req, signal)) {
+        if (signal.aborted) return;
         if (event.type === "chunk") {
           turnText += event.text;
-          turnEl.setText(turnText);
-          turnEl.appendChild(cursorEl);
+          textSpan.textContent = turnText;
           this.outputEl.scrollTop = this.outputEl.scrollHeight;
         }
         if (event.type === "done") {
@@ -111,11 +119,12 @@ export class PAIResultModal extends Modal {
           } else {
             this.lastDoneEvent = event;
             this.history.push({ role: "assistant", content: turnText });
-            this.fullDialogText += (this.fullDialogText ? "\n\n" : "") + turnText;
+            this.fullDialogText += (this.fullDialogText ? "\n\n---\n\n" : "") + `**PAI:** ${turnText}`;
           }
         }
       }
     } catch (e) {
+      if ((e as Error).name === "AbortError") { cursorEl.remove(); this.setStreaming(false); return; }
       cursorEl.remove();
       turnEl.setText(t("noticeError", { error: (e as Error).message }));
       turnEl.addClass("memex-pai-turn-error");
