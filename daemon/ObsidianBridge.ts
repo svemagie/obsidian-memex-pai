@@ -55,7 +55,12 @@ async function findSkillDirs(root: string, rel = ""): Promise<string[]> {
   return results;
 }
 
-async function buildPrompt(action: string, skill: string | undefined, content: string): Promise<string> {
+async function buildPrompt(
+  action: string,
+  skill: string | undefined,
+  content: string,
+  history?: Array<{ role: string; content: string }>,
+): Promise<string> {
   let systemPrompt: string;
 
   if (action === "skill" && skill) {
@@ -72,7 +77,17 @@ async function buildPrompt(action: string, skill: string | undefined, content: s
     systemPrompt = await readFile(join(ALGORITHM_PATH, `${latest}.md`), "utf8");
   }
 
-  return `${systemPrompt}\n\n---\n\nNote content:\n\n${content}`;
+  let prompt = `${systemPrompt}\n\n---\n\nNote content:\n\n${content}`;
+
+  if (history && history.length > 0) {
+    prompt += "\n\n---\n\nPrevious conversation:\n\n";
+    for (const turn of history) {
+      const speaker = turn.role === "user" ? "User" : "Assistant";
+      prompt += `${speaker}: ${turn.content}\n\n`;
+    }
+  }
+
+  return prompt;
 }
 
 function sseChunk(data: object): string {
@@ -133,7 +148,7 @@ const server = Bun.serve({
     }
 
     if (req.method === "POST" && url.pathname === "/invoke") {
-      let body: { action: string; skill?: string; content: string; notePath: string };
+      let body: { action: string; skill?: string; content: string; notePath: string; history?: Array<{ role: string; content: string }> };
       try {
         body = await req.json() as typeof body;
       } catch {
@@ -166,7 +181,7 @@ const server = Bun.serve({
 
           let prompt: string;
           try {
-            prompt = await buildPrompt(body.action, body.skill, body.content);
+            prompt = await buildPrompt(body.action, body.skill, body.content, body.history);
           } catch (e) {
             enqueue({ type: "done", error: `Failed to build prompt: ${(e as Error).message}` });
             controller.close();
