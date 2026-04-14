@@ -1,0 +1,20 @@
+/* Skill picker rows */
+.memex-pai-skill-name {
+  font-weight: 500;
+}
+
+.memex-pai-skill-desc {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  display: block;
+}
+
+/* Ribbon error state */
+.memex-pai-ribbon-error svg {
+  color: var(--color-red);
+}
+
+/* Settings status badge */
+.memex-pai-status {
+  font-size: 1.1em;
+}

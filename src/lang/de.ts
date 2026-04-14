@@ -1,0 +1,16 @@
+export const de: Record<string, string> = {
+  cmdSkillOnNote:        "Memex PAI: Skill auf Notiz",
+  cmdAlgorithmOnNote:    "Memex PAI: Algorithm auf Notiz",
+  noticeNoDaemon:        "Memex PAI: Daemon nicht aktiv. Bitte in den Einstellungen starten.",
+  noticeNoFile:          "Memex PAI: Keine Notiz ge\u00f6ffnet.",
+  noticeEmptyNote:       "Memex PAI: Notiz ist leer.",
+  noticeContentTooLarge: "Memex PAI: Notiz zu gro\u00df (max. 100 KB).",
+  noticeRunning:         "PAI {skill} l\u00e4uft\u2026 {elapsed}",
+  noticeError:           "PAI Fehler: {error}",
+  settingsTitle:         "Memex PAI",
+  settingDaemonUrl:      "Daemon-URL",
+  settingDaemonUrlDesc:  "Adresse des lokalen PAI-Daemons.",
+  settingDaemonStatus:   "Daemon-Status",
+  btnStartDaemon:        "Daemon starten",
+  daemonTooltipUnreachable: "Daemon nicht erreichbar \u2014 Einstellungen pr\u00fcfen",
+};

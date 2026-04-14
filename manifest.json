@@ -1,0 +1,10 @@
+{
+  "id": "memex-pai",
+  "name": "Memex PAI",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Invoke PAI skills and the Algorithm on any note from the command palette.",
+  "author": "Sven",
+  "authorUrl": "https://github.com/svemagie",
+  "isDesktopOnly": true
+}

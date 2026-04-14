@@ -1,0 +1,19 @@
+{
+  "name": "memex-pai",
+  "version": "0.1.0",
+  "description": "Invoke PAI skills and the Algorithm from Obsidian",
+  "author": "Sven",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "build": "node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.25.0",
+    "obsidian": "latest",
+    "typescript": "^5.0.0"
+  }
+}
