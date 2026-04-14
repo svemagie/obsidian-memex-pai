@@ -1,9 +1,10 @@
 import { Notice, Plugin } from "obsidian";
 import { PAIClient } from "./PAIClient";
+import { PAIResultModal } from "./PAIResultModal";
 import { PAIResultWriter } from "./PAIResultWriter";
 import { PAISkillPickerModal } from "./PAISkillPickerModal";
 import { MemexPAISettingsTab } from "./SettingsTab";
-import { PluginSettings, DEFAULT_SETTINGS, SSEEvent } from "./types";
+import { PluginSettings, DEFAULT_SETTINGS } from "./types";
 import { t } from "./i18n";
 
 export default class MemexPAIPlugin extends Plugin {
@@ -65,7 +66,7 @@ export default class MemexPAIPlugin extends Plugin {
     if (skills.length === 0) { new Notice(t("noticeNoDaemon")); return; }
 
     new PAISkillPickerModal(this.app, skills, async (skill) => {
-      await this.runInvocation({
+      this.runInvocation({
         action: "skill",
         skill: skill.name,
         content,
@@ -85,61 +86,20 @@ export default class MemexPAIPlugin extends Plugin {
     const ok = await this.checkDaemonStatus();
     if (!ok) { new Notice(t("noticeNoDaemon")); return; }
 
-    await this.runInvocation({
+    this.runInvocation({
       action: "algorithm",
       content,
       notePath: file.path,
     }, t("cmdAlgorithmOnNote"), file);
   }
 
-  private async runInvocation(
+  private runInvocation(
     req: Parameters<PAIClient["invoke"]>[0],
     label: string,
     sourceFile: import("obsidian").TFile,
-  ): Promise<void> {
-    const notice = new Notice(t("noticeRunning", { skill: label, elapsed: "0s" }), 0);
-    const start = Date.now();
-    const timer = setInterval(() => {
-      const elapsed = `${Math.floor((Date.now() - start) / 1000)}s`;
-      notice.setMessage(t("noticeRunning", { skill: label, elapsed }));
-    }, 5000);
-
-    let fullText = "";
-    let doneEvent: SSEEvent | null = null;
-
-    try {
-      for await (const event of this.client.invoke(req)) {
-        if (event.type === "chunk") fullText += event.text;
-        if (event.type === "done") { doneEvent = event; break; }
-      }
-    } catch (e) {
-      clearInterval(timer);
-      notice.hide();
-      new Notice(t("noticeError", { error: (e as Error).message }));
-      return;
-    }
-
-    clearInterval(timer);
-    notice.hide();
-
-    if (!doneEvent || doneEvent.type !== "done") {
-      new Notice(t("noticeError", { error: "No response from daemon." }));
-      return;
-    }
-    if (doneEvent.error) {
-      new Notice(t("noticeError", { error: doneEvent.error }));
-      return;
-    }
-
+  ): void {
     const writer = new PAIResultWriter(this.app);
-
-    if (doneEvent.resultAction === "new-note" && doneEvent.suggestedName) {
-      const newFile = await writer.createNote(doneEvent.suggestedName, fullText, sourceFile);
-      const leaf = this.app.workspace.getLeaf("tab");
-      await leaf.openFile(newFile);
-    } else if (doneEvent.resultAction === "append") {
-      await writer.appendToNote(sourceFile, fullText, label);
-    }
+    new PAIResultModal(this.app, this.client, writer, req, sourceFile, label).open();
   }
 
   async saveSettings(): Promise<void> {
