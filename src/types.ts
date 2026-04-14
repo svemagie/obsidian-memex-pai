@@ -8,6 +8,7 @@ export interface InvokeRequest {
   skill?: string;        // required when action === "skill"
   content: string;
   notePath: string;
+  history?: ConversationTurn[];
 }
 
 export interface SSEChunkEvent {
@@ -20,6 +21,11 @@ export interface SSEDoneEvent {
   resultAction?: "new-note" | "append";
   suggestedName?: string;
   error?: string;
+}
+
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
 }
 
 export type SSEEvent = SSEChunkEvent | SSEDoneEvent;
