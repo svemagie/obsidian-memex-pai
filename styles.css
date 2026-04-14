@@ -18,3 +18,79 @@
 .memex-pai-status {
   font-size: 1.1em;
 }
+
+/* Interactive result modal */
+.memex-pai-modal .modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  max-height: 600px;
+}
+
+.memex-pai-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: var(--font-ui-medium);
+}
+
+.memex-pai-modal-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  white-space: pre-wrap;
+  font-size: var(--font-ui-small);
+}
+
+.memex-pai-turn {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.memex-pai-turn.assistant {
+  background: var(--background-secondary);
+}
+
+.memex-pai-turn.user {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  margin-left: 2rem;
+}
+
+.memex-pai-turn-error {
+  color: var(--color-red);
+  font-style: italic;
+}
+
+.memex-pai-cursor {
+  animation: memex-blink 1s step-end infinite;
+}
+
+@keyframes memex-blink {
+  50% { opacity: 0; }
+}
+
+.memex-pai-modal-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: flex-end;
+}
+
+.memex-pai-modal-textarea {
+  flex: 1;
+  resize: none;
+  font-size: var(--font-ui-small);
+}
+
+.memex-pai-modal-send {
+  flex-shrink: 0;
+}
+
+.memex-pai-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
