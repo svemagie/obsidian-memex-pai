@@ -110,6 +110,7 @@ const CORS_HEADERS = {
 
 const server = Bun.serve({
   port: PORT,
+  idleTimeout: 0, // disable — claude --print can take minutes
   async fetch(req) {
     const url = new URL(req.url);
 
