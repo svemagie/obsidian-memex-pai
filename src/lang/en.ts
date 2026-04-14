@@ -13,4 +13,12 @@ export const en: Record<string, string> = {
   settingDaemonStatus:   "Daemon status",
   btnStartDaemon:        "Start daemon",
   daemonTooltipUnreachable: "Daemon unreachable \u2014 check Settings",
+  modalTitle:         "PAI: {label}",
+  modalPlaceholder:   "Ask a follow-up\u2026",
+  modalSend:          "Send",
+  modalCreateNote:    "Create Note",
+  modalAppend:        "Append",
+  modalCancel:        "Cancel",
+  modalStreaming:     "\u258c",
+  modalErrorNoResponse: "No response from daemon.",
 };

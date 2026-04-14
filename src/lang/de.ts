@@ -13,4 +13,12 @@ export const de: Record<string, string> = {
   settingDaemonStatus:   "Daemon-Status",
   btnStartDaemon:        "Daemon starten",
   daemonTooltipUnreachable: "Daemon nicht erreichbar \u2014 Einstellungen pr\u00fcfen",
+  modalTitle:         "PAI: {label}",
+  modalPlaceholder:   "Nachfrage stellen\u2026",
+  modalSend:          "Senden",
+  modalCreateNote:    "Notiz erstellen",
+  modalAppend:        "Anh\u00e4ngen",
+  modalCancel:        "Abbrechen",
+  modalStreaming:     "\u258c",
+  modalErrorNoResponse: "Keine Antwort vom Daemon.",
 };
