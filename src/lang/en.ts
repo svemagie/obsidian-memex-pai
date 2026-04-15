@@ -20,5 +20,8 @@ export const en: Record<string, string> = {
   modalAppend:        "Append",
   modalCancel:        "Cancel",
   modalStreaming:     "\u258c",
+  modalCopy:          "Copy",
+  noticeCopied:       "Copied to clipboard.",
+  noticeCopyFailed:   "Copy failed.",
   modalErrorNoResponse: "No response from daemon.",
 };

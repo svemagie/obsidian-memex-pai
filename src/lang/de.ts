@@ -20,5 +20,8 @@ export const de: Record<string, string> = {
   modalAppend:        "Anh\u00e4ngen",
   modalCancel:        "Abbrechen",
   modalStreaming:     "\u258c",
+  modalCopy:          "Kopieren",
+  noticeCopied:       "In Zwischenablage kopiert.",
+  noticeCopyFailed:   "Kopieren fehlgeschlagen.",
   modalErrorNoResponse: "Keine Antwort vom Daemon.",
 };

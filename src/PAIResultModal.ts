@@ -1,4 +1,4 @@
-import { App, Modal, Notice, TFile } from "obsidian";
+import { App, MarkdownRenderer, Modal, Notice, TFile } from "obsidian";
 import { PAIClient } from "./PAIClient";
 import { PAIResultWriter } from "./PAIResultWriter";
 import { ConversationTurn, InvokeRequest, SSEDoneEvent } from "./types";
@@ -15,6 +15,7 @@ export class PAIResultModal extends Modal {
   private isStreaming = false;
   private abortController: AbortController | null = null;
   private fullDialogText = "";
+  private scrollPending = false;
 
   constructor(
     app: App,
@@ -29,6 +30,7 @@ export class PAIResultModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this;
+    this.modalEl.addClass("memex-pai-modal-container");
     contentEl.addClass("memex-pai-modal");
 
     contentEl.createEl("h2", {
@@ -42,7 +44,7 @@ export class PAIResultModal extends Modal {
     const inputRow = contentEl.createEl("div", { cls: "memex-pai-modal-input-row" });
     this.inputEl = inputRow.createEl("textarea", {
       cls: "memex-pai-modal-textarea",
-      attr: { placeholder: t("modalPlaceholder"), rows: "2" },
+      attr: { placeholder: t("modalPlaceholder"), rows: "3" },
     }) as HTMLTextAreaElement;
     this.sendBtn = inputRow.createEl("button", {
       text: t("modalSend"),
@@ -58,6 +60,9 @@ export class PAIResultModal extends Modal {
 
     // Action buttons
     const actionRow = contentEl.createEl("div", { cls: "memex-pai-modal-actions" });
+    const copyBtn = actionRow.createEl("button", {
+      text: t("modalCopy"),
+    }) as HTMLButtonElement;
     this.createNoteBtn = actionRow.createEl("button", {
       text: t("modalCreateNote"),
       cls: "mod-cta",
@@ -69,6 +74,7 @@ export class PAIResultModal extends Modal {
       text: t("modalCancel"),
     }) as HTMLButtonElement;
 
+    copyBtn.addEventListener("click", () => this.copyDialog());
     this.createNoteBtn.addEventListener("click", () => this.writeResult("new-note"));
     this.appendBtn.addEventListener("click", () => this.writeResult("append"));
     cancelBtn.addEventListener("click", () => this.close());
@@ -82,6 +88,15 @@ export class PAIResultModal extends Modal {
   onClose(): void {
     this.abortController?.abort();
     this.contentEl.empty();
+  }
+
+  private scrollToBottom(): void {
+    if (this.scrollPending) return;
+    this.scrollPending = true;
+    requestAnimationFrame(() => {
+      this.outputEl.scrollTop = this.outputEl.scrollHeight;
+      this.scrollPending = false;
+    });
   }
 
   private setStreaming(active: boolean): void {
@@ -108,7 +123,7 @@ export class PAIResultModal extends Modal {
         if (event.type === "chunk") {
           turnText += event.text;
           textSpan.textContent = turnText;
-          this.outputEl.scrollTop = this.outputEl.scrollHeight;
+          this.scrollToBottom();
         }
         if (event.type === "done") {
           gotDone = true;
@@ -120,19 +135,23 @@ export class PAIResultModal extends Modal {
             this.lastDoneEvent = event;
             this.history.push({ role: "assistant", content: turnText });
             this.fullDialogText += (this.fullDialogText ? "\n\n---\n\n" : "") + `**PAI:** ${turnText}`;
+            textSpan.empty();
+            await MarkdownRenderer.render(this.app, turnText, textSpan, this.sourceFile.path, this);
           }
         }
       }
     } catch (e) {
-      if ((e as Error).name === "AbortError") { cursorEl.remove(); this.setStreaming(false); return; }
-      cursorEl.remove();
-      turnEl.setText(t("noticeError", { error: (e as Error).message }));
+      if ((e as Error).name === "AbortError") { this.setStreaming(false); return; }
+      if (this.contentEl.isConnected) {
+        turnEl.setText(t("noticeError", { error: (e as Error).message }));
+      }
       turnEl.addClass("memex-pai-turn-error");
       gotDone = true;
+    } finally {
+      cursorEl.remove();
     }
 
     if (!gotDone) {
-      cursorEl.remove();
       this.outputEl.createEl("div", {
         text: t("modalErrorNoResponse"),
         cls: "memex-pai-turn-error",
@@ -151,12 +170,22 @@ export class PAIResultModal extends Modal {
 
     const userEl = this.outputEl.createEl("div", { cls: "memex-pai-turn user" });
     userEl.setText(text);
-    this.outputEl.scrollTop = this.outputEl.scrollHeight;
+    this.scrollToBottom();
 
     this.fullDialogText += `\n\n---\n\n**You:** ${text}`;
 
     this.setStreaming(true);
     await this.streamTurn({ ...this.req, history: [...this.history] });
+  }
+
+  private async copyDialog(): Promise<void> {
+    if (!this.fullDialogText) return;
+    try {
+      await navigator.clipboard.writeText(this.fullDialogText);
+      new Notice(t("noticeCopied"));
+    } catch {
+      new Notice(t("noticeCopyFailed"));
+    }
   }
 
   private async writeResult(action: "new-note" | "append"): Promise<void> {

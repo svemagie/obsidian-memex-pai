@@ -20,11 +20,14 @@
 }
 
 /* Interactive result modal */
+.memex-pai-modal-container {
+  min-width: min(640px, 90vw);
+}
+
 .memex-pai-modal {
   display: flex;
   flex-direction: column;
-  height: 70vh;
-  max-height: 600px;
+  height: 78vh;
 }
 
 .memex-pai-modal-title {
@@ -35,12 +38,13 @@
 .memex-pai-modal-output {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5rem;
+  padding: 0.75rem;
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   margin-bottom: 0.5rem;
   white-space: pre-wrap;
-  font-size: var(--font-ui-small);
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .memex-pai-turn {
@@ -82,7 +86,6 @@
 .memex-pai-modal-textarea {
   flex: 1;
   resize: none;
-  font-size: var(--font-ui-small);
 }
 
 .memex-pai-modal-send {
